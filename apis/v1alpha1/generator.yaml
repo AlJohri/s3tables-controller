@@ -240,6 +240,18 @@ resources:
           path: Configuration
         late_initialize:
           skip_incomplete_check: {}
+      # Bucket resource policy (JSON). Not part of CreateTableBucket or
+      # GetTableBucket — managed via the dedicated
+      # Put/Get/DeleteTableBucketPolicy APIs. Populated in the read hook and
+      # synced in update. Late-init so an adopted bucket's existing policy is
+      # captured and drift is detectable.
+      Policy:
+        is_iam_policy: true
+        from:
+          operation: GetTableBucketPolicy
+          path: ResourcePolicy
+        late_initialize:
+          skip_incomplete_check: {}
     exceptions:
       errors:
         404:
@@ -247,6 +259,8 @@ resources:
       terminal_codes:
         - BadRequestException
     hooks:
+      sdk_read_one_pre_build_request:
+        template_path: hooks/table_bucket/sdk_read_one_pre_build_request.go.tpl
       sdk_read_one_post_set_output:
         template_path: hooks/table_bucket/sdk_read_one_post_set_output.go.tpl
     update_operation:
